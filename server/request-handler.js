@@ -72,14 +72,29 @@ var requestHandler = function(request, response) {
 
         console.log('Empty file undefined?', data === undefined);
 
-        if(typeof data !== 'string') {
-          var messageArray = JSON.parse(data);
-        }
+        // if(typeof data !== 'string') {
+        //   var messageArray = JSON.parse(data);
+        // }
+        //
+        //
+        // if(!Array.isArray(messageArray)){
+        //   messageArray = [];
+        // }
 
+        // need to fix this, wrong params
+        // fs.existsSync('messages.json', function(exists) {
+        //   if (!exists) {
+        //     fs.writeFile('messages.json', [], function (err) {//update messages.json
+        //       console.log('File is empty, initializing');
+        //
+        //       if (err) {
+        //         throw err;
+        //       }
+        //     });
+        //   }
+        // });
 
-        if(!Array.isArray(messageArray)){
-          messageArray = [];
-        }
+        var messageArray = JSON.parse(data);
 
         console.log('Current contents of file: ', data);
         console.log('Parsed data?: ', typeof data);
