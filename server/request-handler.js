@@ -18,8 +18,10 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 var fs = require('fs');
+var path = require('path');
 var messages = [];
 var requestHandler = function(request, response) {
+
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -35,7 +37,7 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   // console.log(request);
-  console.log('Serving request type ' + request.method + ' for url ' + request.url + 'with whole request: ');
+  console.log('Serving request type ' + request.method + ' for url ' + request.url);
   console.log(request.body);
 
 
@@ -47,76 +49,64 @@ var requestHandler = function(request, response) {
     // get, parse request body
     // add to file fs.appendFile
   if (request.method === 'POST') {
-    request.on('data', function(chunk){
-      var data = [];
-      data.push(chunk);
+    request.on('data', function(chunk) { // on receiving data
+      // var data = [];
+      // data.push(chunk);
 
+      // convert data to object
       var body = chunk.toString();
-      console.log('chunk is type: ', chunk);
       var message = {};
-
-      // username=hodor&text=hello&roomname=lobby
       var processMessage = body.split('&');
-      for( var i = 0; i < processMessage.length; i++){
+      for (var i = 0; i < processMessage.length; i++) {
         var array = processMessage[i].split('=');
         message[array[0]] = array[1];
       }
-      console.log('message : ' + JSON.stringify(message));
-      var stringifiedMessageArray;
+
+      var stringifiedMessageArray = '';
+
+      // retrieve current messages in file
       fs.readFile('messages.json', 'utf8', (err, data) => {//look into messages.json
         if(err) {
           throw err;
         }
+
+        console.log('Empty file undefined?', data === undefined);
+
         if(typeof data !== 'string') {
-          console.log('data', data);
           var messageArray = JSON.parse(data);
         }
+
 
         if(!Array.isArray(messageArray)){
           messageArray = [];
         }
+
+        console.log('Current contents of file: ', data);
+        console.log('Parsed data?: ', typeof data);
         messageArray.push(message);//messageArray is in for ready to be sent back
-        console.log('data', messageArray);
+
+
+        console.log('New contents of file: ', messageArray);
         stringifiedMessageArray = JSON.stringify(messageArray);
+        console.log('Stringified: ', stringifiedMessageArray);
+
+        fs.writeFile('messages.json', stringifiedMessageArray, function (err) {//update messages.json
+          console.log('Writing: ', stringifiedMessageArray);
+          if (err) {
+            throw err;
+          }
+        });
+
       });
 
+      // console.log('Outside scope: ', stringifiedMessageArray);
+      // rewrite file with new message appended
 
-      fs.writeFile('messages.json', stringifiedMessageArray, function (err) {//update messages.json
-        if (err) {
-          throw err;
-        }
-        console.log('Appended message!');
-      });
-    // });
-    }).on('end', () => {
-    //   body = Buffer.concat(body).toString();
-    //   console.log('body is: ' + body);
-    });
-
+    }).on('end', () => {});
 
     statusCode = 201;
-  } else if(request.method === 'GET'){//end of POST ********************************************************************
-    var stringifiedMessageArray;
-    var messageArray;
-    var message = {};
-    fs.readFile('messages.json', 'utf8', (err, data) => {//look into messages.json
-      if(err) {
-        throw err;
-      }
-      if(typeof data !== 'string') {
-        console.log('data', data);
-        messageArray = JSON.parse(data);
-      }
+  } //end of POST ********************************************************************
 
-      if(!Array.isArray(messageArray)){
-        messageArray = [];
-      }
-      messageArray.push(message);//messageArray is in for ready to be sent back
-      console.log('data', messageArray);
-      stringifiedMessageArray = JSON.stringify(messageArray);
-    });
-    response.end(JSON.stringify({'results': messageArray}));
-  }
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 

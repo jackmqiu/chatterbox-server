@@ -221,7 +221,7 @@ var app = {
     app.send(message);
 
     // Stop the form from submitting
-    event.preventDefault();
+    // event.preventDefault();
   },
 
   startSpinner: function() {
