@@ -23,6 +23,15 @@ var messages = [];
 var mochaTesting = false;
 
 var requestHandler = function(request, response) {
+  var newUrl;
+
+  var paramIndex = request.url.indexOf('?');
+  if (paramIndex !== -1) {
+    newUrl = request.url.slice(0, paramIndex);
+  } else {
+    newUrl = request.url;
+  }
+
 
 // set default headers
   var headers = defaultCorsHeaders;
@@ -30,8 +39,8 @@ var requestHandler = function(request, response) {
 
   var statusCode = 200;
 
-  if (request.url !== '/classes/messages' && request.url !== '/classes/room') {
-    console.log('404 current request: ', request.url, request.method);
+  if (newUrl!== '/classes/messages' && newUrl !== '/classes/room') {
+    // console.log('404 current request: ', request.url, request.method);
     statusCode = 404;
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify({'results': ['hello', 'world']}));
@@ -66,7 +75,7 @@ var requestHandler = function(request, response) {
         }
       }
 
-      messages.push(message);
+      messages.unshift(message);
 
 
       //console.log(body);
@@ -129,11 +138,10 @@ var requestHandler = function(request, response) {
 
     });
     request.on('end', () => {
+      statusCode = 201;
+      response.writeHead(statusCode, headers);
+      response.end();
     });
-
-    statusCode = 201;
-    response.writeHead(statusCode, headers);
-    response.end();
 
   // handle get requests
   } else if (request.method === 'GET') {
