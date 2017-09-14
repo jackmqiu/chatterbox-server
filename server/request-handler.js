@@ -48,18 +48,40 @@ var requestHandler = function(request, response) {
     // add to file fs.appendFile
   if (request.method === 'POST') {
     request.on('data', function(chunk){
+      var data = [];
+      data.push(chunk);
+
       var body = chunk.toString();
       console.log('chunk is type: ', chunk);
       var message = {};
 
       // username=hodor&text=hello&roomname=lobby
       var processMessage = body.split('&');
+      for( var i = 0; i < processMessage.length; i++){
+        var array = processMessage[i].split('=');
+        message[array[0]] = array[1];
+      }
+      console.log('message : ' + JSON.stringify(message));
+      var stringifiedMessageArray;
+      fs.readFile('messages.json', 'utf8', (err, data) => {//look into messages.json
+        if(err) {
+          throw err;
+        }
+        if(typeof data !== 'string') {
+          console.log('data', data);
+          var messageArray = JSON.parse(data);
+        }
+
+        if(!Array.isArray(messageArray)){
+          messageArray = [];
+        }
+        messageArray.push(message);//messageArray is in for ready to be sent back
+        console.log('data', messageArray);
+        stringifiedMessageArray = JSON.stringify(messageArray);
+      });
 
 
-
-
-
-      fs.appendFile('messages.json', body, function (err) {
+      fs.writeFile('messages.json', stringifiedMessageArray, function (err) {//update messages.json
         if (err) {
           throw err;
         }
@@ -73,8 +95,28 @@ var requestHandler = function(request, response) {
 
 
     statusCode = 201;
-  }
+  } else if(request.method === 'GET'){//end of POST ********************************************************************
+    var stringifiedMessageArray;
+    var messageArray;
+    var message = {};
+    fs.readFile('messages.json', 'utf8', (err, data) => {//look into messages.json
+      if(err) {
+        throw err;
+      }
+      if(typeof data !== 'string') {
+        console.log('data', data);
+        messageArray = JSON.parse(data);
+      }
 
+      if(!Array.isArray(messageArray)){
+        messageArray = [];
+      }
+      messageArray.push(message);//messageArray is in for ready to be sent back
+      console.log('data', messageArray);
+      stringifiedMessageArray = JSON.stringify(messageArray);
+    });
+    response.end(JSON.stringify({'results': messageArray}));
+  }
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 
@@ -95,6 +137,7 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
+
   response.end(JSON.stringify({'results': ['hello', 'world']}));
 };
 
