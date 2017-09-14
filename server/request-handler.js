@@ -48,92 +48,103 @@ var requestHandler = function(request, response) {
   // if request type is POST
     // get, parse request body
     // add to file fs.appendFile
-  if (request.method === 'POST') {
+  if (request.method === 'POST' && request.url === '/classes/messages') {
     request.on('data', function(chunk) { // on receiving data
       // var data = [];
       // data.push(chunk);
 
       // convert data to object
       var body = chunk.toString();
-      var message = {};
-      var processMessage = body.split('&');
-      for (var i = 0; i < processMessage.length; i++) {
-        var array = processMessage[i].split('=');
-        message[array[0]] = array[1];
-      }
+      // var message = {};
+      // var processMessage = body.split('&');
+      // for (var i = 0; i < processMessage.length; i++) {
+      //   var array = processMessage[i].split('=');
+      //   message[array[0]] = array[1];
+      // }
+      //console.log(body);
+      var message = JSON.parse(body);
 
-      var stringifiedMessageArray = '';
+      messages.push(message);
+      console.log(messages);
+      // var stringifiedMessageArray = '';
 
       // retrieve current messages in file
-      fs.readFile('messages.json', 'utf8', (err, data) => {//look into messages.json
-        if(err) {
-          throw err;
-        }
+      // fs.readFile('messages.json', 'utf8', (err, data) => {//look into messages.json
+      //   if(err) {
+      //     throw err;
+      //   }
+      //
+      //   console.log('Empty file undefined?', data === undefined);
+      //
+      //   // if(typeof data !== 'string') {
+      //   //   var messageArray = JSON.parse(data);
+      //   // }
+      //   //
+      //   //
+      //   // if(!Array.isArray(messageArray)){
+      //   //   messageArray = [];
+      //   // }
+      //
+      //   // need to fix this, wrong params
+      //   // fs.existsSync('messages.json', function(exists) {
+      //   //   if (!exists) {
+      //   //     fs.writeFile('messages.json', [], function (err) {//update messages.json
+      //   //       console.log('File is empty, initializing');
+      //   //
+      //   //       if (err) {
+      //   //         throw err;
+      //   //       }
+      //   //     });
+      //   //   }
+      //   // });
+      //
+      //   var messageArray = JSON.parse(data);
+      //
+      //   console.log('Current contents of file: ', data);
+      //   console.log('Parsed data?: ', typeof data);
+      //   messageArray.push(message);//messageArray is in for ready to be sent back
+      //
+      //
+      //   console.log('New contents of file: ', messageArray);
+      //   stringifiedMessageArray = JSON.stringify(messageArray);
+      //   console.log('Stringified: ', stringifiedMessageArray);
+      //
+      //   fs.writeFile('messages.json', stringifiedMessageArray, function (err) {//update messages.json
+      //     console.log('Writing: ', stringifiedMessageArray);
+      //     if (err) {
+      //       throw err;
+      //     }
+      //   });
 
-        console.log('Empty file undefined?', data === undefined);
-
-        // if(typeof data !== 'string') {
-        //   var messageArray = JSON.parse(data);
-        // }
-        //
-        //
-        // if(!Array.isArray(messageArray)){
-        //   messageArray = [];
-        // }
-
-        // need to fix this, wrong params
-        // fs.existsSync('messages.json', function(exists) {
-        //   if (!exists) {
-        //     fs.writeFile('messages.json', [], function (err) {//update messages.json
-        //       console.log('File is empty, initializing');
-        //
-        //       if (err) {
-        //         throw err;
-        //       }
-        //     });
-        //   }
-        // });
-
-        var messageArray = JSON.parse(data);
-
-        console.log('Current contents of file: ', data);
-        console.log('Parsed data?: ', typeof data);
-        messageArray.push(message);//messageArray is in for ready to be sent back
-
-
-        console.log('New contents of file: ', messageArray);
-        stringifiedMessageArray = JSON.stringify(messageArray);
-        console.log('Stringified: ', stringifiedMessageArray);
-
-        fs.writeFile('messages.json', stringifiedMessageArray, function (err) {//update messages.json
-          console.log('Writing: ', stringifiedMessageArray);
-          if (err) {
-            throw err;
-          }
-        });
-
-      });
+      // });
 
       // console.log('Outside scope: ', stringifiedMessageArray);
       // rewrite file with new message appended
 
-    }).on('end', () => {});
+    }).on('end', () => {
+    });
 
     statusCode = 201;
+    var headers = defaultCorsHeaders;
+    headers['Content-Type'] = 'application/json';
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify({'results': ['messages', 'posted']}));
+
   } //end of POST ********************************************************************
 
   // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'application/json';
+  //   var headers = defaultCorsHeaders;
+  // headers['Content-Type'] = 'application/json';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -142,8 +153,18 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-
-  response.end(JSON.stringify({'results': ['hello', 'world']}));
+  if(request.method === 'GET' && request.url === '/classes/messages'){
+    var headers = defaultCorsHeaders;
+    headers['Content-Type'] = 'application/json';
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify({'results': messages}));
+  }else{
+    statusCode = 404;
+    var headers = defaultCorsHeaders;
+    headers['Content-Type'] = 'application/json';
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify({'results': ['hello', 'world']}));
+  }
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -157,4 +178,4 @@ var requestHandler = function(request, response) {
 // client from this domain by setting up static file serving.
 
 
-module.exports = requestHandler;
+module.exports.requestHandler = requestHandler;
