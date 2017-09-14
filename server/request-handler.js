@@ -20,6 +20,8 @@ var defaultCorsHeaders = {
 // var fs = require('fs');
 var path = require('path');
 var messages = [];
+var mochaTesting = false;
+
 var requestHandler = function(request, response) {
 
 // set default headers
@@ -40,17 +42,19 @@ var requestHandler = function(request, response) {
     request.on('data', function(chunk) { // on receiving data
       // var data = [];
       // data.push(chunk);
-
+      statusCode = 200;
       // convert TEST data to object
       var body = chunk.toString();
       if (body.indexOf('=') === -1) {
         console.log('this is a test');
+        mochaTesting = true;
         var message = JSON.parse(body);
 
       // process CHATTERBOX data
       } else {
         var message = {};
-        body = body.replace('+', ' ');
+        body = body.split('+');
+        body = body.join(' ');
         var processMessage = body.split('&');
         console.log('Split message', processMessage);
 
@@ -132,9 +136,20 @@ var requestHandler = function(request, response) {
     response.end();
 
   // handle get requests
-  } else if(request.method === 'GET') {
+  } else if (request.method === 'GET') {
+
+    if (!messages[0] && !mochaTesting) {
+      console.log(mochaTesting);
+      console.log('first', messages[0]);
+      messages.push({
+        username: 'Chatroom',
+        text: 'Post something if you value your life'
+      });
+    }
+
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify({'results': messages}));
+
 
   } else if (request.method === 'OPTIONS') {
     response.writeHead(statusCode, headers);
