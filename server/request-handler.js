@@ -37,8 +37,8 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   // console.log(request);
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  console.log(request.body);
+  // console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  // console.log(request.body);
 
 
 
@@ -48,7 +48,7 @@ var requestHandler = function(request, response) {
   // if request type is POST
     // get, parse request body
     // add to file fs.appendFile
-  if (request.method === 'POST' && request.url === '/classes/messages') {
+  if (request.method === 'POST' && (request.url === '/classes/messages' || request.url === '/classes/room')) {
     request.on('data', function(chunk) { // on receiving data
       // var data = [];
       // data.push(chunk);
@@ -121,7 +121,8 @@ var requestHandler = function(request, response) {
       // console.log('Outside scope: ', stringifiedMessageArray);
       // rewrite file with new message appended
 
-    }).on('end', () => {
+    });
+    request.on('end', () => {
     });
 
     statusCode = 201;
@@ -130,7 +131,24 @@ var requestHandler = function(request, response) {
     response.writeHead(statusCode, headers);
     response.end(JSON.stringify({'results': ['messages', 'posted']}));
 
-  } //end of POST ********************************************************************
+  } else if(request.method === 'GET' && (request.url === '/classes/messages' || request.url === '/classes/rooms')){
+    var headers = defaultCorsHeaders;
+    headers['Content-Type'] = 'application/json';
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify({'results': messages}));
+  } else {
+    console.log('404 current request: ', request.url);
+    console.log('404 current request: ', request.method);
+    statusCode = 404;
+    var headers = defaultCorsHeaders;
+    headers['Content-Type'] = 'application/json';
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify({'results': ['hello', 'world']}));
+  }
+};
+
+
+  //else if(request.method === 'POST' && request.url === '/classes/room'){ //end of POST ********************************************************************
 
   // See the note below about CORS headers.
 
@@ -153,19 +171,7 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  if(request.method === 'GET' && request.url === '/classes/messages'){
-    var headers = defaultCorsHeaders;
-    headers['Content-Type'] = 'application/json';
-    response.writeHead(statusCode, headers);
-    response.end(JSON.stringify({'results': messages}));
-  }else{
-    statusCode = 404;
-    var headers = defaultCorsHeaders;
-    headers['Content-Type'] = 'application/json';
-    response.writeHead(statusCode, headers);
-    response.end(JSON.stringify({'results': ['hello', 'world']}));
-  }
-};
+
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
