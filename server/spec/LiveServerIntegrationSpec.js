@@ -75,5 +75,30 @@ describe('server', function() {
     });
   });
 
+  it('Should return 200 on an OPTIONS request', function(done) {
+    var requestParams = {method: 'OPTIONS',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+    };
+    request(requestParams, function(error, response, body){
+      expect(response.statusCode).to.equal(200);
+      done();
+    });
+  });
+
+  it('Should have no messages after DELETE request', function(done) {
+    var requestParams = {method: 'DELETE',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+    };
+
+    request(requestParams, function(error, response, body) {
+      // Now if we request the log, that message we posted should be there:
+      request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
+        var messages = JSON.parse(body).results;
+        expect(messages[0]).to.equal(undefined);
+        done();
+      });
+    });
+  });
+
 
 });

@@ -160,8 +160,14 @@ var requestHandler = function(request, response) {
 
 
   } else if (request.method === 'OPTIONS') {
+    statusCode = 200;
     response.writeHead(statusCode, headers);
     response.end('OK');
+  } else if (request.method === 'DELETE') {
+    statusCode = 202;
+    response.writeHead( statusCode, headers);
+    messages = [];
+    response.end('DELETED');
   }
 };
 
